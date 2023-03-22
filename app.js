@@ -47,15 +47,35 @@ async function handleEvent(event) {
     // ignore non-text-message event
     return Promise.resolve(null);
   }
+  
   // 宣告使用openai的module來回答，此為chatgpt 3.0
-  const completion = await openai.createCompletion({
-    model: "text-davinci-003",
-    prompt: event.message.text ,
+  //const completion = await openai.createCompletion({
+  //  model: "text-davinci-003",
+  //  prompt: event.message.text ,
+  //  max_tokens: 1000,
+  //});
+  // 建立chatgpt 3.0回傳訊息的格式echo
+  //const echo = { type: 'text', text: completion.data.choices[0].text.trim() };
+  
+  // 宣告使用openai的module來回答，此為chatgpt 3.5
+  const { data } = await openai.createChatCompletion({
+    model: "gpt-3.5-turbo",
+    messages: [
+      {
+        role: 'user',
+        content: '之後的交談中，你叫做AI，2023/3/2出生，請盡量使用繁體中文來回答．'
+      },
+      {
+        role: 'user',
+        content: event.message.text,
+      }
+    ],
     max_tokens: 1000,
   });
 
-  // 建立回傳訊息的格式
-  const echo = { type: 'text', text: completion.data.choices[0].text.trim() };
+  // 建立chatgpt 3.0回傳訊息的格式echo
+  const [choices] = data.choices;
+  const echo = { type: 'text', text: choices.message.content.trim() || '抱歉，我沒有話可說了。' };
 
   // 回傳訊息，use reply API
   return client.replyMessage(event.replyToken, echo);
